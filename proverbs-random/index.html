@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>잠언 말씀</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Malgun Gothic","Apple SD Gothic Neo",sans-serif;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:#14171d;color:#f4f3ef}
+body{display:flex;align-items:flex-start;justify-content:center;padding:12px}
+.widget{width:min(100%,740px);border:1px solid #353941;border-radius:20px;background:linear-gradient(148deg,#22262e,#191c23);padding:21px;box-shadow:0 16px 40px #0002;overflow:hidden}
+.header{position:relative;display:flex;align-items:center;justify-content:center;padding:2px 0 18px}
+.brand{margin:0;font-size:17px;font-weight:750;letter-spacing:-.4px;color:#e7c893;text-align:center}
+.symbol{color:inherit}
+.scope{position:absolute;right:0;top:2px;font-size:11px;letter-spacing:.05em;color:#aaa9b1;border:1px solid #484751;border-radius:999px;padding:6px 11px;white-space:nowrap}
+.verse-card{margin:0;min-height:200px;border:1px solid #3d414b;border-radius:14px;background:#262b34;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:34px 25px;gap:15px}
+.reference{color:#e8c58b;font-weight:750;font-size:15px;letter-spacing:-.25px}
+.verse{font-size:clamp(16px,2.65vw,20px);font-weight:550;line-height:2.05;word-break:keep-all;overflow-wrap:break-word;white-space:pre-wrap}
+.hint{color:#a8abb5;font-size:14px;line-height:1.6}
+.bottom{padding:0}
+.action{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:16px;padding:16px;border:0;border-radius:12px;background:#e1be86;color:#2b2116;font-family:inherit;font-size:16px;font-weight:800;cursor:pointer;transition:background .15s,transform .12s}
+.action:hover:not(:disabled){background:#f5d3a2}
+.action:active:not(:disabled){transform:scale(.992)}
+.action:disabled{background:#666975;color:#e0e1e5;cursor:wait}
+.action svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.foot{height:12px}
+.attribution{margin:12px 2px 0;text-align:center;font-size:10px;line-height:1.5;color:#a8abb5}
+@media(max-width:600px){.header{flex-direction:column;gap:8px}.scope{position:static}}@media(max-width:480px){body{padding:7px}.widget{padding:13px;border-radius:15px}.verse-card{padding:25px 15px;min-height:180px}.verse{font-size:17px;line-height:1.95}}
+@media(prefers-reduced-motion:no-preference){.verse-card.loaded{animation:appear .26s ease-out}@keyframes appear{from{opacity:.5;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}}
+</style>
+</head>
+<body>
+<main class="widget" aria-label="잠언 말씀 랜덤 뽑기">
+ <header class="header"><h1 class="brand"><span class="symbol" aria-hidden="true">✦</span> 잠언 말씀</h1><div class="scope">잠언 31장 · 개역한글</div></header>
+ <section class="verse-card" id="card" aria-live="polite" aria-atomic="true"><div class="reference" id="ref">말씀을 준비하고 있습니다</div><div class="hint" id="verse">잠언 1~31장 전체 구절을 불러오는 중입니다.</div></section>
+ <div class="bottom"><button type="button" id="pick" class="action" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20L20 4M13 4h7v7M4 4l3 3M4 11l3 3M13 20l3-3"/></svg><span id="btn-label">말씀 불러오는 중</span></button><p class="attribution">성경전서 개역한글판 © 대한성서공회 1961</p></div>
+</main>
+<script>
+(() => {
+ const books=["잠언"];
+ const card=document.getElementById("card"),ref=document.getElementById("ref"),verse=document.getElementById("verse"),button=document.getElementById("pick"),buttonLabel=document.getElementById("btn-label");
+ let verses=[],last=-1;
+ function randomBelow(n){if(n<=1)return 0;const max=4294967296,limit=Math.floor(max/n)*n;const x=new Uint32Array(1);let v;do{crypto.getRandomValues(x);v=x[0]}while(v>=limit);return v%n;}
+ function draw(){if(!verses.length)return;let n=last===-1?randomBelow(verses.length):randomBelow(verses.length-1);if(last!==-1&&n>=last)n++;last=n;const v=verses[n];ref.textContent=v.book+" "+v.chapter+":"+v.verse;verse.textContent=v.text;verse.className="verse";card.classList.remove("loaded");void card.offsetWidth;card.classList.add("loaded");buttonLabel.textContent="다시 뽑기";}
+ button.addEventListener("click",draw);
+ async function loadBook(book){const response=await fetch("./data/"+encodeURIComponent(book)+".json");if(!response.ok)throw Error(book+" "+response.status);const obj=await response.json();if(obj.book!==book||!Array.isArray(obj.chapters))throw Error("Invalid "+book);const out=[];for(const ch of obj.chapters){for(const v of ch.verses||[]){const body=typeof v.text==="string"?v.text.trim():"";if(body&&!/^[(（]?\s*없음\s*[)）]?$/.test(body))out.push({book,chapter:ch.chapter,verse:v.verse,text:body})}}if(!out.length)throw Error("Empty "+book);return out}
+ Promise.all(books.map(loadBook)).then(parts=>{verses=parts.flat();button.disabled=false;draw()}).catch(error=>{console.error(error);ref.textContent="불러오지 못했습니다";verse.textContent="인터넷 연결을 확인한 뒤 아래 버튼으로 다시 시도해 주세요.";button.disabled=false;buttonLabel.textContent="새로고침";button.replaceWith(button.cloneNode(true));document.getElementById("pick").addEventListener("click",()=>location.reload());});
+})();
+</script>
+</body>
+</html>
