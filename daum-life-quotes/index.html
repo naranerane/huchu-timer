@@ -40,13 +40,14 @@ function rand(n){if(n<=1)return 0;const a=new Uint32Array(1),max=4294967296,limi
 function showMessage(message){const p=document.createElement('p');p.className='message';p.textContent=message;display.replaceChildren(p);}
 function pick(){
  if(!records.length)return;
- let i=last<0?rand(records.length):rand(records.length-1);
- if(last>=0&&i>=last)i++;
- last=i;
+ const skipLast = last >= 0 && records.length > 1;
+ let index = rand(records.length - (skipLast ? 1 : 0));
+ if (skipLast && index >= last) index++;
+ last = index;
  const block=document.createElement('blockquote');
- block.textContent=records[i];
+ block.textContent=records[index];
  display.replaceChildren(block);
- button.textContent='다른 어록 뽑기';
+ button.textContent=records.length===1?'어록 다시 뽑기':'다른 어록 뽑기';
 }
 button.addEventListener('click',pick);
 fetch('./data/quotes.json',{cache:'no-store'}).then(async res=>{
