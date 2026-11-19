@@ -23,8 +23,9 @@ button:hover:not(:disabled){background:#f5d3a2}button:active:not(:disabled){tran
 (()=>{'use strict';
 const button=document.getElementById('next'),display=document.getElementById('display');
 let records=[],last=-1;
+function cleanText(value){return value.replace(/[\\₩](?=~)/g,'');}
 function rand(n){if(n<=1)return 0;const a=new Uint32Array(1),max=4294967296,limit=Math.floor(max/n)*n;let x;do{crypto.getRandomValues(a);x=a[0]}while(x>=limit);return x%n}
-function pick(){if(!records.length)return;let i=last<0?rand(records.length):rand(records.length-1);if(last>=0&&i>=last)i++;last=i;const block=document.createElement('blockquote');block.textContent=records[i].text;display.replaceChildren(block);button.textContent='다른 어록 뽑기'}
+function pick(){if(!records.length)return;let i=last<0?rand(records.length):rand(records.length-1);if(last>=0&&i>=last)i++;last=i;const block=document.createElement('blockquote');block.textContent=cleanText(records[i].text);display.replaceChildren(block);button.textContent='다른 어록 뽑기'}
 button.addEventListener('click',pick);
 const parts=Array.from({length:10},(_,i)=>'./data/part-'+String(i+1).padStart(2,'0')+'.json');
 Promise.all(parts.map(async file=>{const r=await fetch(file,{cache:'no-cache'});if(!r.ok)throw Error('Load '+file);return r.json()}))
