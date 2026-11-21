@@ -29,7 +29,7 @@ function pick(){if(!records.length)return;let i=last<0?rand(records.length):rand
 button.addEventListener('click',pick);
 const parts=Array.from({length:10},(_,i)=>'./data/part-'+String(i+1).padStart(2,'0')+'.json');
 Promise.all(parts.map(async file=>{const r=await fetch(file,{cache:'no-cache'});if(!r.ok)throw Error('Load '+file);return r.json()}))
-.then(chunks=>{const all=chunks.flat();records=all.filter(q=>q&&typeof q.text==='string'&&q.text.trim()&&!/^(?:없음|\(없음\))$/.test(q.text.trim()));if(records.length!==100)throw Error('Expected 100 quotes, got '+records.length);button.disabled=false;pick()})
+.then(chunks=>{const all=chunks.flat();records=all.filter(q=>q&&typeof q.text==='string'&&q.text.trim()&&!/^(?:없음|\(없음\))$/.test(q.text.trim()));if(records.length!==569)throw Error('Expected 569 quotes, got '+records.length);button.disabled=false;pick()})
 .catch(err=>{console.error(err);display.textContent='어록을 불러오지 못했습니다. 새로고침해 주세요.';button.disabled=false;button.textContent='새로고침';button.removeEventListener('click',pick);button.addEventListener('click',()=>location.reload())});
 })();
 </script></body></html>
